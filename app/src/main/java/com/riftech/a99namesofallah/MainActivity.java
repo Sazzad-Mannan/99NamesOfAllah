@@ -124,7 +124,8 @@ loadAd();
 
     public void loadAd() {
         AdRequest adRequest2 = new AdRequest.Builder().build();
-
+//ca-app-pub-3940256099942544/1033173712
+        //ca-app-pub-7831928589958637/6266654826
         InterstitialAd.load(this,"ca-app-pub-7831928589958637/6266654826", adRequest2,
                 new InterstitialAdLoadCallback() {
                     @Override

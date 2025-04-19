@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
                 .setTagForUnderAgeOfConsent(false)
                 .build();
 
+
         consentInformation = UserMessagingPlatform.getConsentInformation(this);
         consentInformation.requestConsentInfoUpdate(
                 this,

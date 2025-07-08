@@ -5,14 +5,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 
 public class Main2Activity extends AppCompatActivity {
     TextView txt1,txt2,txt3;
-    private AdView mAdView;
+//    private AdView mAdView;
     String meaning[];
     String description[];
     String des;
@@ -24,9 +21,9 @@ public class Main2Activity extends AppCompatActivity {
 
 
 
-        mAdView = findViewById(R.id.adView2);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
+//        mAdView = findViewById(R.id.adView2);
+//        AdRequest adRequest = new AdRequest.Builder().build();
+//        mAdView.loadAd(adRequest);
 
 
 

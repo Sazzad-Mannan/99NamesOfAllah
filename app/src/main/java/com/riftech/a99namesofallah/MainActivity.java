@@ -1,20 +1,14 @@
 package com.riftech.a99namesofallah;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
+
 
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Debug;
-import android.os.Handler;
-import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,38 +21,27 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.ads.AdError;
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.FullScreenContentCallback;
-import com.google.android.gms.ads.LoadAdError;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.initialization.InitializationStatus;
-import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
-import com.google.android.gms.ads.interstitial.InterstitialAd;
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.ump.ConsentDebugSettings;
-import com.google.android.ump.ConsentForm;
-import com.google.android.ump.ConsentInformation;
-import com.google.android.ump.ConsentRequestParameters;
-import com.google.android.ump.FormError;
-import com.google.android.ump.UserMessagingPlatform;
-
-import java.util.Objects;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.play.core.appupdate.AppUpdateManager;
+import com.google.android.play.core.appupdate.AppUpdateInfo;
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
+import com.google.android.play.core.install.model.AppUpdateType;
+import com.google.android.play.core.install.model.InstallStatus;
+import com.google.android.play.core.install.model.UpdateAvailability;
+import androidx.annotation.Nullable;
 
 
 public class MainActivity extends AppCompatActivity {
+    private static final int UPDATE_REQUEST_CODE = 123;
+    private AppUpdateManager appUpdateManager;
     private static final String TAG = "MainActivity";
     ListView listView ;
     private ProgressBar pgsBar;
-    private AdView mAdView;
-    private InterstitialAd mInterstitialAd;
+
     private Intent intent;
 
-    private ConsentInformation consentInformation;
-    private ConsentForm consentForm;
+
     AlertDialog.Builder builder;
     AlertDialog customAlertDialog;
     SharedPreferences sharedPreferences;
@@ -72,36 +55,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
-        // Set tag for under age of consent. false means users are not under
-        // age.
-        ConsentRequestParameters params = new ConsentRequestParameters
-                .Builder()
-                .setTagForUnderAgeOfConsent(false)
-                .build();
 
-
-        consentInformation = UserMessagingPlatform.getConsentInformation(this);
-        consentInformation.requestConsentInfoUpdate(
-                this,
-                params,
-                new ConsentInformation.OnConsentInfoUpdateSuccessListener() {
-                    @Override
-                    public void onConsentInfoUpdateSuccess() {
-                        // The consent information state was updated.
-                        // You are now ready to check if a form is available.
-
-                        if (consentInformation.isConsentFormAvailable()) {
-
-                            loadForm();
-                        }
-                    }
-                },
-                new ConsentInformation.OnConsentInfoUpdateFailureListener() {
-                    @Override
-                    public void onConsentInfoUpdateFailure(FormError formError) {
-                        // Handle the error.
-                    }
-                });
 
 
         // Storing data into SharedPreferences
@@ -117,28 +71,9 @@ public class MainActivity extends AppCompatActivity {
 // otherwise, it will throw an error
             myEdit.apply();
         }
-        if(!sharedPreferences.contains("interval")) {
-// Creating an Editor object to edit(write to the file)
-            SharedPreferences.Editor myEdit = sharedPreferences.edit();
-
-// Storing the key and its value as the data fetched from edittext
-            myEdit.putInt("interval",0);
-
-// Once the changes have been made, we need to commit to apply those changes made,
-// otherwise, it will throw an error
-            myEdit.apply();
-        }
 
 
-        MobileAds.initialize(this, new OnInitializationCompleteListener() {
-            @Override
-            public void onInitializationComplete(InitializationStatus initializationStatus) {
-            }
-        });
 
-        mAdView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
 
 
 
@@ -147,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
         listView = (ListView) findViewById(R.id.list);
         pgsBar = (ProgressBar) findViewById(R.id.pBar);
 
-        loadAd();
+//        loadAd();
         changelang();
 
 
@@ -182,23 +117,15 @@ public class MainActivity extends AppCompatActivity {
 
                 // ListView Clicked item index
                 final int itemPosition     = position;
-                int selected_index = sharedPreferences.getInt("interval", 0);
+//                int selected_index = sharedPreferences.getInt("interval", 0);
 
                 // ListView Clicked item value
                 final String  itemValue    = (String) listView.getItemAtPosition(position);
                  intent = new Intent(getBaseContext(), Main2Activity.class);
                 intent.putExtra("position", itemPosition);
                 intent.putExtra("value", itemValue);
-                if (mInterstitialAd != null && selected_index>3) {
-
-                    update_interval(0);
-                    mInterstitialAd.show(MainActivity.this);
-                } else {
-                    update_interval(++selected_index);
-                    Log.d("TAG", "The interstitial Ya wasn't ready yet.");
-                    loadAd();
-                    startActivity(intent);
-                }
+                startActivity(intent);
+//
 
 
             }
@@ -206,17 +133,61 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void update_interval(int interval){
-        SharedPreferences.Editor myEdit = sharedPreferences.edit();
-
-// Storing the key and its value as the data fetched from edittext
-        myEdit.putInt("interval",interval);
-
-// Once the changes have been made, we need to commit to apply those changes made,
-// otherwise, it will throw an error
-        myEdit.apply();
-
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Always check for updates when user returns to the app
+        checkForUpdate();
     }
+
+    private void checkForUpdate() {
+        appUpdateManager = AppUpdateManagerFactory.create(this);
+
+        Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
+
+        appUpdateInfoTask.addOnSuccessListener(appUpdateInfo -> {
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                    && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
+
+                try {
+                    appUpdateManager.startUpdateFlowForResult(
+                            appUpdateInfo,
+                            AppUpdateType.FLEXIBLE,
+                            this,
+                            UPDATE_REQUEST_CODE
+                    );
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            } else if (appUpdateInfo.installStatus() == InstallStatus.DOWNLOADED) {
+                // Update is downloaded but not installed
+                showCompleteUpdateSnackbar();
+            }
+        });
+    }
+
+    private void showCompleteUpdateSnackbar() {
+        Snackbar snackbar = Snackbar.make(
+                findViewById(android.R.id.content),
+                "Update ready! Restart to apply.",
+                Snackbar.LENGTH_INDEFINITE
+        );
+        snackbar.setAction("Restart", view -> appUpdateManager.completeUpdate());
+        snackbar.show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == UPDATE_REQUEST_CODE) {
+            if (resultCode != RESULT_OK) {
+                Toast.makeText(this, "Update canceled. You will be reminded again.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     // create an action bar button
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -373,67 +344,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void loadAd() {
-        AdRequest adRequest2 = new AdRequest.Builder().build();
-//ca-app-pub-3940256099942544/1033173712
-        //ca-app-pub-7831928589958637/6266654826
-        InterstitialAd.load(this,"ca-app-pub-7831928589958637/6266654826", adRequest2,
-                new InterstitialAdLoadCallback() {
-                    @Override
-                    public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
-                        // The mInterstitialAd reference will be null until
-                        // an ad is loaded.
-                        mInterstitialAd = interstitialAd;
-                        Log.i(TAG, "onAdLoaded");
-                        //Toast.makeText(MainActivity.this, "onAdLoaded()", Toast.LENGTH_SHORT).show();
-                        interstitialAd.setFullScreenContentCallback(
-                                new FullScreenContentCallback() {
-                                    @Override
-                                    public void onAdDismissedFullScreenContent() {
-                                        // Called when fullscreen content is dismissed.
-                                        // Make sure to set your reference to null so you don't
-                                        // show it a second time.
-                                        MainActivity.this.mInterstitialAd = null;
-                                        Log.d("TAG", "The ad was dismissed.");
 
-                                       startActivity(intent);
-                                        //dismissed();
-
-                                    }
-
-                                    @Override
-                                    public void onAdFailedToShowFullScreenContent(AdError adError) {
-                                        // Called when fullscreen content failed to show.
-                                        // Make sure to set your reference to null so you don't
-                                        // show it a second time.
-                                        MainActivity.this.mInterstitialAd = null;
-                                        Log.d("TAG", "The ad failed to show.");
-                                    }
-
-                                    @Override
-                                    public void onAdShowedFullScreenContent() {
-                                        // Called when fullscreen content is shown.
-                                        Log.d("TAG", "The ad was shown.");
-                                    }
-                                });
-                    }
-
-                    @Override
-                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                        // Handle the error
-                        Log.i(TAG, loadAdError.getMessage());
-                        mInterstitialAd = null;
-                       /* String error =
-                                String.format(
-                                        "domain: %s, code: %d, message: %s",
-                                        loadAdError.getDomain(), loadAdError.getCode(), loadAdError.getMessage());
-                        Toast.makeText(
-                                MainActivity.this, "onAdFailedToLoad() with error: " + error, Toast.LENGTH_SHORT)
-                                .show();*/
-                    }
-
-                });
-    }
 
     public void start_match(final View view){
 
@@ -441,38 +352,38 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void loadForm() {
-        // Loads a consent form. Must be called on the main thread.
-        UserMessagingPlatform.loadConsentForm(
-                this,
-                new UserMessagingPlatform.OnConsentFormLoadSuccessListener() {
-                    @Override
-                    public void onConsentFormLoadSuccess(ConsentForm consentForm) {
-                        MainActivity.this.consentForm = consentForm;
-                        if (consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.REQUIRED) {
-                            consentForm.show(
-                                    MainActivity.this,
-                                    new ConsentForm.OnConsentFormDismissedListener() {
-                                        @Override
-                                        public void onConsentFormDismissed(@Nullable FormError formError) {
-                                            if (consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.OBTAINED) {
-                                                // App can start requesting ads.
-                                            }
-
-                                            // Handle dismissal by reloading form.
-                                            loadForm();
-                                        }
-                                    });
-                        }
-                    }
-                },
-                new UserMessagingPlatform.OnConsentFormLoadFailureListener() {
-                    @Override
-                    public void onConsentFormLoadFailure(FormError formError) {
-                        // Handle the error.
-                    }
-                }
-        );
-    }
+//    public void loadForm() {
+//        // Loads a consent form. Must be called on the main thread.
+//        UserMessagingPlatform.loadConsentForm(
+//                this,
+//                new UserMessagingPlatform.OnConsentFormLoadSuccessListener() {
+//                    @Override
+//                    public void onConsentFormLoadSuccess(ConsentForm consentForm) {
+//                        MainActivity.this.consentForm = consentForm;
+//                        if (consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.REQUIRED) {
+//                            consentForm.show(
+//                                    MainActivity.this,
+//                                    new ConsentForm.OnConsentFormDismissedListener() {
+//                                        @Override
+//                                        public void onConsentFormDismissed(@Nullable FormError formError) {
+//                                            if (consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.OBTAINED) {
+//                                                // App can start requesting ads.
+//                                            }
+//
+//                                            // Handle dismissal by reloading form.
+//                                            loadForm();
+//                                        }
+//                                    });
+//                        }
+//                    }
+//                },
+//                new UserMessagingPlatform.OnConsentFormLoadFailureListener() {
+//                    @Override
+//                    public void onConsentFormLoadFailure(FormError formError) {
+//                        // Handle the error.
+//                    }
+//                }
+//        );
+//    }
 
 }

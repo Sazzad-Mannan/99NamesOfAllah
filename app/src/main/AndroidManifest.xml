@@ -11,13 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!--
-         Sample AdMob App ID: ca-app-pub-3940256099942544~3347511713
-         ca-app-pub-7831928589958637~7771308185
-        -->
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-7831928589958637~7771308185" />
+   
 
         <activity
             android:name=".Main2Activity"
